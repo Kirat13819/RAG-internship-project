@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF RAG</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>📄 PDF Q&amp;A</h1>
+      <p id="status" class="status">Connecting...</p>
+    </header>
+
+    <section id="messages" class="messages"></section>
+
+    <form id="ask-form" class="ask-form">
+      <input
+        id="question"
+        type="text"
+        placeholder="Ask a question about the documents..."
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Ask</button>
+    </form>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
