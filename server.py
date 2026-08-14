@@ -3,6 +3,7 @@
 Usage: uvicorn server:app --reload
 """
 
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -14,6 +15,8 @@ from src.rag_pipeline import answer_question
 from src.vector_store import VectorStore
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="PDF RAG API")
 
@@ -47,7 +50,12 @@ class AskResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "chunks_indexed": len(store), "topics": store.topics()}
+    return {
+        "status": "ok",
+        "chunks_indexed": len(store),
+        "topics": store.topics(),
+        "gemini_key_configured": bool(os.environ.get("GEMINI_API_KEY")),
+    }
 
 
 @app.post("/ask", response_model=AskResponse)
@@ -57,7 +65,14 @@ def ask(request: AskRequest):
     if not request.question.strip():
         raise HTTPException(status_code=400, detail="Question must not be empty.")
 
-    result = answer_question(store, request.question)
+    try:
+        result = answer_question(store, request.question)
+    except Exception as exc:
+        # Surface the cause as a normal HTTP error so CORS headers are applied and
+        # the browser shows the real message instead of an opaque "Failed to fetch".
+        logger.exception("Failed to answer question")
+        raise HTTPException(status_code=502, detail=f"Upstream error: {exc}") from exc
+
     return AskResponse(
         answer=result.answer,
         sources=[
