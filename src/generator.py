@@ -4,7 +4,7 @@ from src.embeddings import get_client
 from src.vector_store import SearchResult
 
 GENERATION_MODEL = "gemini-2.5-flash"
-COMPANY_NAME = "Vantree Technologies"
+COMPANY_NAME = "Northlane"
 
 PROMPT_TEMPLATE = """You are the {company_name} assistant, answering employee questions using only the context below.
 
