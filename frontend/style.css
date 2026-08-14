@@ -340,62 +340,6 @@ body {
   font-size: 0.92rem;
 }
 
-.qa-sources {
-  margin-top: 1.1rem;
-}
-
-.qa-sources-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-  margin-bottom: 0.6rem;
-}
-
-.source-cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
-}
-
-.source-card {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.7rem 0.8rem;
-  background: var(--surface);
-}
-
-.source-card-top {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.3rem;
-}
-
-.source-card-doc {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.source-card-page {
-  font-size: 0.72rem;
-  color: var(--text-faint);
-  flex-shrink: 0;
-}
-
-.source-card-snippet {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 .followup-form {
   margin-top: 1.5rem;
   position: sticky;
@@ -416,8 +360,5 @@ body {
   }
   .home h1 {
     font-size: 1.7rem;
-  }
-  .source-cards {
-    grid-template-columns: 1fr;
   }
 }

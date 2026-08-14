@@ -25,13 +25,6 @@ const searchInput = document.getElementById("search-input");
 const followupForm = document.getElementById("followup-form");
 const followupInput = document.getElementById("followup-input");
 
-function humanize(filename) {
-  return filename
-    .replace(/\.pdf$/i, "")
-    .replace(/[_-]/g, " ")
-    .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-
 async function checkHealth() {
   try {
     const res = await fetch(`${API_URL}/health`);
@@ -75,35 +68,6 @@ function buildEntry(question) {
   return entry;
 }
 
-function renderSources(entry, sources) {
-  if (!sources || sources.length === 0) return;
-
-  const wrap = document.createElement("div");
-  wrap.className = "qa-sources";
-  wrap.innerHTML = `<div class="qa-sources-label">Sources</div>`;
-
-  const grid = document.createElement("div");
-  grid.className = "source-cards";
-
-  for (const s of sources) {
-    const card = document.createElement("div");
-    card.className = "source-card";
-    card.innerHTML = `
-      <div class="source-card-top">
-        <span class="source-card-doc"></span>
-        <span class="source-card-page">p.${s.page_number}</span>
-      </div>
-      <div class="source-card-snippet"></div>
-    `;
-    card.querySelector(".source-card-doc").textContent = humanize(s.source);
-    card.querySelector(".source-card-snippet").textContent = s.snippet;
-    grid.appendChild(card);
-  }
-
-  wrap.appendChild(grid);
-  entry.appendChild(wrap);
-}
-
 async function ask(question) {
   question = question.trim();
   if (!question) return;
@@ -138,7 +102,6 @@ async function ask(question) {
     const answerEl = entry.querySelector(".qa-answer");
     answerEl.classList.remove("pending");
     answerEl.textContent = data.answer;
-    renderSources(entry, data.sources);
   } catch (err) {
     const answerEl = entry.querySelector(".qa-answer");
     answerEl.classList.remove("pending");
