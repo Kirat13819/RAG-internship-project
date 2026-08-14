@@ -1,5 +1,5 @@
 // Update this after you deploy the backend (see README) — e.g. "https://your-app.onrender.com"
-const API_URL = "http://localhost:8000";
+const API_URL = "https://rag-internship-project.onrender.com";
 
 const messagesEl = document.getElementById("messages");
 const formEl = document.getElementById("ask-form");
