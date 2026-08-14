@@ -37,6 +37,7 @@ class SourceOut(BaseModel):
     source: str
     page_number: int
     score: float
+    snippet: str
 
 
 class AskResponse(BaseModel):
@@ -46,7 +47,7 @@ class AskResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "chunks_indexed": len(store)}
+    return {"status": "ok", "chunks_indexed": len(store), "topics": store.topics()}
 
 
 @app.post("/ask", response_model=AskResponse)
@@ -60,7 +61,12 @@ def ask(request: AskRequest):
     return AskResponse(
         answer=result.answer,
         sources=[
-            SourceOut(source=s.source, page_number=s.page_number, score=s.score)
+            SourceOut(
+                source=s.source,
+                page_number=s.page_number,
+                score=s.score,
+                snippet=(s.text[:220] + "…") if len(s.text) > 220 else s.text,
+            )
             for s in result.sources
         ],
     )

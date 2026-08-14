@@ -1,60 +1,126 @@
 // Update this after you deploy the backend (see README) — e.g. "https://your-app.onrender.com"
 const API_URL = "https://rag-internship-project.onrender.com";
 
-const messagesEl = document.getElementById("messages");
-const formEl = document.getElementById("ask-form");
-const inputEl = document.getElementById("question");
-const statusEl = document.getElementById("status");
+// A few real questions grounded in the indexed docs — edit freely as your corpus changes.
+const SUGGESTED_QUERIES = [
+  "How many sick days do I get?",
+  "Is SMS-based MFA still allowed?",
+  "Can I recover a deleted task?",
+  "How long until my laptop is wiped after I leave?",
+  "Can I expense a bottle of wine at a client dinner?",
+  "What's the home office reimbursement limit?",
+];
+
+const statusDot = document.querySelector(".status-dot");
+const statusText = document.getElementById("status-text");
+const docListEl = document.getElementById("doc-list");
+const chipsEl = document.getElementById("chips");
+
+const homeEl = document.getElementById("home");
+const threadEl = document.getElementById("thread");
+const threadScrollEl = document.getElementById("thread-scroll");
+
+const searchForm = document.getElementById("search-form");
+const searchInput = document.getElementById("search-input");
+const followupForm = document.getElementById("followup-form");
+const followupInput = document.getElementById("followup-input");
+
+function humanize(filename) {
+  return filename
+    .replace(/\.pdf$/i, "")
+    .replace(/[_-]/g, " ")
+    .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
 
 async function checkHealth() {
   try {
     const res = await fetch(`${API_URL}/health`);
     const data = await res.json();
-    statusEl.textContent = `Connected — ${data.chunks_indexed} chunks indexed.`;
+    statusDot.classList.add("online");
+    statusText.textContent = `${data.chunks_indexed} chunks indexed`;
+
+    docListEl.innerHTML = "";
+    for (const topic of data.topics || []) {
+      const li = document.createElement("li");
+      li.textContent = topic;
+      docListEl.appendChild(li);
+    }
   } catch (err) {
-    statusEl.textContent = `Could not reach backend at ${API_URL}. Is it running/deployed?`;
+    statusText.textContent = "Backend unreachable";
   }
 }
 
-function addMessage(role, text) {
-  const el = document.createElement("div");
-  el.className = `message ${role}`;
-  el.textContent = text;
-  messagesEl.appendChild(el);
-  el.scrollIntoView({ behavior: "smooth", block: "end" });
-  return el;
+function renderChips() {
+  chipsEl.innerHTML = "";
+  for (const query of SUGGESTED_QUERIES) {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = query;
+    chip.addEventListener("click", () => ask(query));
+    chipsEl.appendChild(chip);
+  }
 }
 
-function renderSources(container, sources) {
+function buildEntry(question) {
+  const entry = document.createElement("article");
+  entry.className = "qa-entry";
+  entry.innerHTML = `
+    <h2 class="qa-question"></h2>
+    <div class="qa-answer pending">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+  `;
+  entry.querySelector(".qa-question").textContent = question;
+  return entry;
+}
+
+function renderSources(entry, sources) {
   if (!sources || sources.length === 0) return;
 
-  const details = document.createElement("details");
-  details.className = "sources";
-  const summary = document.createElement("summary");
-  summary.textContent = "Sources";
-  details.appendChild(summary);
+  const wrap = document.createElement("div");
+  wrap.className = "qa-sources";
+  wrap.innerHTML = `<div class="qa-sources-label">Sources</div>`;
+
+  const grid = document.createElement("div");
+  grid.className = "source-cards";
 
   for (const s of sources) {
-    const item = document.createElement("div");
-    item.className = "source-item";
-    item.textContent = `${s.source}, page ${s.page_number} (score ${s.score.toFixed(2)})`;
-    details.appendChild(item);
+    const card = document.createElement("div");
+    card.className = "source-card";
+    card.innerHTML = `
+      <div class="source-card-top">
+        <span class="source-card-doc"></span>
+        <span class="source-card-page">p.${s.page_number}</span>
+      </div>
+      <div class="source-card-snippet"></div>
+    `;
+    card.querySelector(".source-card-doc").textContent = humanize(s.source);
+    card.querySelector(".source-card-snippet").textContent = s.snippet;
+    grid.appendChild(card);
   }
 
-  container.appendChild(details);
+  wrap.appendChild(grid);
+  entry.appendChild(wrap);
 }
 
-formEl.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const question = inputEl.value.trim();
+async function ask(question) {
+  question = question.trim();
   if (!question) return;
 
-  addMessage("user", question);
-  inputEl.value = "";
-  inputEl.disabled = true;
-  formEl.querySelector("button").disabled = true;
+  if (!homeEl.classList.contains("hidden")) {
+    homeEl.classList.add("hidden");
+    threadEl.classList.remove("hidden");
+  }
 
-  const pending = addMessage("assistant pending", "Thinking...");
+  searchInput.value = "";
+  followupInput.value = "";
+  searchForm.querySelector("button").disabled = true;
+  followupForm.querySelector("button").disabled = true;
+
+  const entry = buildEntry(question);
+  threadScrollEl.appendChild(entry);
+  entry.scrollIntoView({ behavior: "smooth", block: "start" });
 
   try {
     const res = await fetch(`${API_URL}/ask`, {
@@ -69,17 +135,31 @@ formEl.addEventListener("submit", async (event) => {
     }
 
     const data = await res.json();
-    pending.classList.remove("pending");
-    pending.textContent = data.answer;
-    renderSources(pending, data.sources);
+    const answerEl = entry.querySelector(".qa-answer");
+    answerEl.classList.remove("pending");
+    answerEl.textContent = data.answer;
+    renderSources(entry, data.sources);
   } catch (err) {
-    pending.classList.remove("pending");
-    pending.textContent = `Error: ${err.message}`;
+    const answerEl = entry.querySelector(".qa-answer");
+    answerEl.classList.remove("pending");
+    answerEl.classList.add("qa-error");
+    answerEl.textContent = `Something went wrong: ${err.message}`;
   } finally {
-    inputEl.disabled = false;
-    formEl.querySelector("button").disabled = false;
-    inputEl.focus();
+    searchForm.querySelector("button").disabled = false;
+    followupForm.querySelector("button").disabled = false;
+    followupInput.focus();
   }
+}
+
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  ask(searchInput.value);
 });
 
+followupForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  ask(followupInput.value);
+});
+
+renderChips();
 checkHealth();
