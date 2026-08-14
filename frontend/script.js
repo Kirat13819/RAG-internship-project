@@ -106,6 +106,15 @@ function buildEntry(question) {
   return entry;
 }
 
+function setLoading(isLoading) {
+  for (const [form, input] of [[searchForm, searchInput], [followupForm, followupInput]]) {
+    const btn = form.querySelector(".send-btn");
+    btn.disabled = isLoading;
+    btn.classList.toggle("loading", isLoading);
+    input.disabled = isLoading;
+  }
+}
+
 async function ask(question) {
   question = question.trim();
   if (!question) return;
@@ -117,8 +126,7 @@ async function ask(question) {
 
   searchInput.value = "";
   followupInput.value = "";
-  searchForm.querySelector("button").disabled = true;
-  followupForm.querySelector("button").disabled = true;
+  setLoading(true);
 
   const entry = buildEntry(question);
   threadScrollEl.appendChild(entry);
@@ -146,8 +154,7 @@ async function ask(question) {
     answerEl.classList.add("qa-error");
     answerEl.textContent = `Something went wrong: ${err.message}`;
   } finally {
-    searchForm.querySelector("button").disabled = false;
-    followupForm.querySelector("button").disabled = false;
+    setLoading(false);
     followupInput.focus();
   }
 }
