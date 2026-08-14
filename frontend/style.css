@@ -80,19 +80,12 @@ body {
   font-weight: 700;
 }
 
-.topnav-status {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
 .status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--text-faint);
+  flex-shrink: 0;
 }
 
 .status-dot.online {
@@ -104,55 +97,9 @@ body {
 .layout {
   flex: 1;
   display: flex;
-  max-width: 1180px;
+  max-width: 760px;
   width: 100%;
   margin: 0 auto;
-}
-
-.doc-sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  padding: 1.5rem 1rem;
-  border-right: 1px solid var(--border);
-}
-
-.doc-sidebar-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-faint);
-  margin-bottom: 0.75rem;
-  padding: 0 0.5rem;
-}
-
-.doc-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.doc-list li {
-  padding: 0.45rem 0.5rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.doc-list li::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.5;
-  flex-shrink: 0;
 }
 
 .main {
@@ -309,7 +256,31 @@ body {
   font-size: 0.98rem;
   line-height: 1.65;
   color: var(--text);
-  white-space: pre-wrap;
+}
+
+.qa-answer p {
+  margin: 0 0 0.85em;
+}
+
+.qa-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.qa-answer ul {
+  margin: 0 0 0.85em;
+  padding-left: 1.3em;
+}
+
+.qa-answer li {
+  margin-bottom: 0.35em;
+}
+
+.qa-answer li:last-child {
+  margin-bottom: 0;
+}
+
+.qa-answer strong {
+  font-weight: 600;
 }
 
 .qa-answer.pending {
@@ -347,12 +318,6 @@ body {
 }
 
 /* ---------- Responsive ---------- */
-
-@media (max-width: 860px) {
-  .doc-sidebar {
-    display: none;
-  }
-}
 
 @media (max-width: 560px) {
   .home {

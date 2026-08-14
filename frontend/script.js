@@ -11,9 +11,7 @@ const SUGGESTED_QUERIES = [
   "What's the home office reimbursement limit?",
 ];
 
-const statusDot = document.querySelector(".status-dot");
-const statusText = document.getElementById("status-text");
-const docListEl = document.getElementById("doc-list");
+const statusDot = document.getElementById("status-dot");
 const chipsEl = document.getElementById("chips");
 
 const homeEl = document.getElementById("home");
@@ -28,19 +26,59 @@ const followupInput = document.getElementById("followup-input");
 async function checkHealth() {
   try {
     const res = await fetch(`${API_URL}/health`);
-    const data = await res.json();
+    if (!res.ok) throw new Error("unhealthy");
     statusDot.classList.add("online");
-    statusText.textContent = `${data.chunks_indexed} chunks indexed`;
-
-    docListEl.innerHTML = "";
-    for (const topic of data.topics || []) {
-      const li = document.createElement("li");
-      li.textContent = topic;
-      docListEl.appendChild(li);
-    }
+    statusDot.title = "Connected";
   } catch (err) {
-    statusText.textContent = "Backend unreachable";
+    statusDot.title = "Backend unreachable";
   }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Renders Gemini's lightly-markdown-formatted text (**bold**, "- " / "* " bullet
+// lists, often with no blank line before the list) as clean HTML instead of raw asterisks.
+function renderAnswer(container, text) {
+  const bolded = escapeHtml(text).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  const lines = bolded.split("\n");
+
+  const parts = [];
+  let buffer = [];
+  let mode = null; // "p" | "ul"
+
+  const flush = () => {
+    if (buffer.length === 0) return;
+    if (mode === "ul") {
+      parts.push(`<ul>${buffer.map((l) => `<li>${l}</li>`).join("")}</ul>`);
+    } else {
+      parts.push(`<p>${buffer.join("<br>")}</p>`);
+    }
+    buffer = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (line === "") {
+      flush();
+      mode = null;
+      continue;
+    }
+    const bullet = line.match(/^[-*]\s+(.*)/);
+    if (bullet) {
+      if (mode !== "ul") flush();
+      mode = "ul";
+      buffer.push(bullet[1]);
+    } else {
+      if (mode !== "p") flush();
+      mode = "p";
+      buffer.push(line);
+    }
+  }
+  flush();
+
+  container.innerHTML = parts.join("");
 }
 
 function renderChips() {
@@ -101,7 +139,7 @@ async function ask(question) {
     const data = await res.json();
     const answerEl = entry.querySelector(".qa-answer");
     answerEl.classList.remove("pending");
-    answerEl.textContent = data.answer;
+    renderAnswer(answerEl, data.answer);
   } catch (err) {
     const answerEl = entry.querySelector(".qa-answer");
     answerEl.classList.remove("pending");
