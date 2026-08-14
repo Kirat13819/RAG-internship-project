@@ -3,7 +3,9 @@
 from src.embeddings import get_client
 from src.vector_store import SearchResult
 
-GENERATION_MODEL = "gemini-2.5-flash"
+# flash-lite has a far higher free-tier daily request limit than flash, which
+# matters here since the answer quality comes mostly from the retrieved context.
+GENERATION_MODEL = "gemini-3.5-flash-lite"
 COMPANY_NAME = "Northlane"
 
 PROMPT_TEMPLATE = """You are the {company_name} assistant, answering employee questions using only the context below.
